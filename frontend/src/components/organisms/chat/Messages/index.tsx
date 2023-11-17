@@ -8,6 +8,7 @@ import { IProjectSettings } from 'state/project';
 
 import MessageContainer from './container';
 import WelcomeScreen from './welcomeScreen';
+import React, { useEffect } from 'react';
 
 interface MessagesProps {
   autoScroll: boolean;
@@ -24,6 +25,36 @@ const Messages = ({
   const { messages } = useChatMessages();
   const { callAction } = useChatInteract();
 
+  const playAudio = (audio: ArrayBuffer) => {
+    const audioBlob = new Blob([audio], { type: 'audio/mpeg' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audioElement = new Audio(audioUrl);
+    audioElement.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+    };
+    audioElement.play();
+  };
+
+  if (elements.length > 0) {
+    const lastElement = elements[elements.length - 1];
+    if (lastElement.content) {
+      //playAudio(lastElement.content);
+    }
+  }
+
+  useEffect(() => {
+    if (elements.length > 0) {
+      const lastElement = elements[elements.length - 1];
+      console.log(lastElement)
+      if (lastElement.content) {
+        playAudio(lastElement.content);
+      }
+    }
+  }, [elements]);
+
+  const filteredElements = elements.filter((element) => element.type !== 'audio');
+  console.log(filteredElements)
+
   return !messages.length && projectSettings?.ui.show_readme_as_default ? (
     <WelcomeScreen markdown={projectSettings?.markdown} />
   ) : (
@@ -32,7 +63,7 @@ const Messages = ({
       loading={loading}
       askUser={askUser}
       actions={actions}
-      elements={elements}
+      elements={filteredElements}
       messages={messages}
       autoScroll={autoScroll}
       callAction={callAction}
